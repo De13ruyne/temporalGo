@@ -27,6 +27,7 @@ func Start(para1 string, para2 string) {
 	// para1 := os.Args[1]
 	// para2 := os.Args[2]
 
+	// retry 3 times
 	for i := 0; i < 2; i++ {
 		// para1 随便一个字符串
 		// para2 设置是否第一次失败

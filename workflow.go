@@ -35,16 +35,16 @@ var ctxMap = safectxMap{
 	data: make(map[string]workflow.Context),
 }
 
-// JobHash的写操作（Set）：加写锁
+// JobHash的写操作：加写锁
 func (jh *safejobHash) Set(key string, val jobmsg) {
 	jh.mu.Lock()
 	defer jh.mu.Unlock()
 	jh.data[key] = val
 }
 
-// JobHash的读操作（Get）：加读锁
+// JobHash的读操作：加读锁
 func (jh *safejobHash) Get(key string) (jobmsg, bool) {
-	jh.mu.RLock() // 读操作加读锁（可多个读锁并发）
+	jh.mu.RLock() // 读操作加读锁 可多个读锁并发
 	defer jh.mu.RUnlock()
 	val, ok := jh.data[key]
 	return val, ok
@@ -83,8 +83,6 @@ func SayHelloWorkflow(ctx workflow.Context, name string, failedAttempts string, 
 
 	info := workflow.GetInfo(ctx)
 
-	// println("ctx1: ", ctx)
-	// workflow.GetLogger(ctx).Debug("")
 	jobtmp := jobmsg{
 		JobID:   info.WorkflowExecution.ID,
 		Status:  "running",
@@ -93,11 +91,8 @@ func SayHelloWorkflow(ctx workflow.Context, name string, failedAttempts string, 
 		Error:   nil,
 	}
 
-	// jobHash.data[info.WorkflowExecution.ID] = jobtmp
-
 	jobHash.Set(info.WorkflowExecution.ID, jobtmp)
 
-	// ctxMap[info.WorkflowExecution.ID] = ctx
 	ctxMap.Set(info.WorkflowExecution.ID, ctx)
 
 	var result string
@@ -107,7 +102,6 @@ func SayHelloWorkflow(ctx workflow.Context, name string, failedAttempts string, 
 	}
 	println("ctx2: ", ctx)
 
-	// // Getting the logger from the context.
 	workflow.GetLogger(ctx).Debug("")
 
 	info = workflow.GetInfo(ctx)
@@ -121,7 +115,6 @@ func SayHelloWorkflow(ctx workflow.Context, name string, failedAttempts string, 
 		Error:   nil,
 	}
 
-	// jobHash[info.WorkflowExecution.ID] = jobtmp
 	jobHash.Set(info.WorkflowExecution.ID, jobtmp)
 
 	workflow.GetLogger(ctx).Debug("")
@@ -131,16 +124,6 @@ func SayHelloWorkflow(ctx workflow.Context, name string, failedAttempts string, 
 
 func QueryWorkflow(ctx workflow.Context, jobID string) (jobmsg, error) {
 
-	// info := workflow.GetInfo(ctx)
-	println("---------------------------")
-	// println(jobHash[jobID].Attempt)
-	// println(ctxMap[jobID])
-	// println((workflow.GetInfo(ctxMap[jobID]).WorkflowStartTime.Format("2006-01-02 15:04:05")))
-	// println((workflow.GetInfo(ctxMap[jobID]).Attempt))
-	println("---------------------------")
-
-	// println("Query info: ", info.WorkflowExecution.ID)
-
 	// 返回预定义的jobMap
 	// return jobHash[jobID], nil
 	if jobret, ok := jobHash.Get(jobID); ok {
@@ -148,34 +131,3 @@ func QueryWorkflow(ctx workflow.Context, jobID string) (jobmsg, error) {
 	}
 	return jobmsg{}, errors.New("job ID not found")
 }
-
-// func MyWorkflow(ctx workflow.Context, input string) error {
-// 	ao := workflow.ActivityOptions{
-// 		StartToCloseTimeout: time.Second * 10,
-// 	}
-// 	currentState := "started" // this could be any serializable struct
-// 	err := workflow.SetQueryHandler(ctx, "current_state", func() (string, error) {
-// 		return currentState, nil
-// 	})
-// 	if err != nil {
-// 		currentState = "failed to register query handler"
-// 		return err
-// 	}
-// 	// your normal workflow code begins here, and you update the currentState as the code makes progress.
-// 	currentState = "waiting timer"
-// 	err = workflow.NewTimer(ctx, time.Hour).Get(ctx, nil)
-// 	if err != nil {
-// 		currentState = "timer failed"
-// 		return err
-// 	}
-
-// 	currentState = "waiting activity"
-// 	ctx = workflow.WithActivityOptions(ctx, ao)
-// 	err = workflow.ExecuteActivity(ctx, Greet, "my_input").Get(ctx, nil)
-// 	if err != nil {
-// 		currentState = "activity failed"
-// 		return err
-// 	}
-// 	currentState = "done"
-// 	return nil
-// }
