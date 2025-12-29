@@ -1,0 +1,57 @@
+version: '3.8'
+networks:
+  temporal-network:
+    driver: bridge
+
+services:
+  # Temporal Server核心服务（worker依赖）
+  temporal:
+    image: temporalio/temporal:latest
+    container_name: temporal
+    command: temporal server start-dev
+    networks:
+      - temporal-network
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+
+
+  # ✅ worker服务：执行 worker/main.go 编译的 ./worker 二进制
+  worker:
+    build:
+      context: .
+    image: temporalgo-worker:v1
+    container_name: temporalgo-worker
+    restart: on-failure
+    networks:
+      - temporal-network
+    depends_on:
+      - temporal
+    # ✅ 核心指定：启动worker二进制
+    command: ["./worker"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+
+  # ✅ watch服务：执行 watch/main.go 编译的 ./watch 二进制
+  watch:
+    build:
+      context: .
+    image: temporalgo-watch:v1
+    container_name: temporalgo-watch
+    restart: on-failure
+    networks:
+      - temporal-network
+    ports:
+      - "8080:8080"
+    depends_on:
+      - temporal
+    # ✅ 核心指定：启动watch二进制
+    command: ["./watch"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
