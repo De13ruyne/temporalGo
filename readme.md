@@ -67,8 +67,8 @@ The API server will start on port 8080 by default.
 ```json
 
 {
-    "input": "greeting-workflow",
-    "options": "0"
+    "input": "greeting-workflow", // jobid
+    "options": "0"      // 1 means failure
 }
 ```
 
