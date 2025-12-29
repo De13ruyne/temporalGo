@@ -4,7 +4,7 @@ This project demonstrates a simple Temporal workflow for job processing with an 
 
 ## 1. Prerequisites
 
-- Go 1.25+
+- Go 1.25
 
 - Temporal
 
